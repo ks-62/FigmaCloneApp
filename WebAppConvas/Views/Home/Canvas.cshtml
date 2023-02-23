@@ -1,0 +1,168 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div class="canvas-plate">
+    <div>
+        <div>
+            <button id="btn-rect">Rectangle</button>
+            <button id="btn-select">Select</button>
+            <button id="btn-clear">Clear</button>
+        </div>
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+    <div>
+        <p><label>Name</label><input id="txtObjName" type="text"/></p>
+        <p><label>X</label><input id="txtLocX" type="text"/></p>
+        <p><label>Y</label><input id="txtLocY" type="text"/></p>
+        <p><label>Width</label><input id="txtObjWidth" type="text"/></p>
+        <p><label>Height</label><input id="txtObjHeight" type="text"/></p>
+        <p><label>Fill</label><input id="txtObjFillColor" type="text" onChange="alertValue(this)" /></p>
+        <p><label>line-width</label><input id="txtLineWidth" type="text"/></p>
+        <p><label>BorderColor</label><input id="txtBorderColor" type="text"/></p>
+    </div>
+    
+</div>
+
+
+<script defer src="~/js/signalr/dist/browser/signalr.js"></script>
+<script defer src="~/js/Canvas.js"></script>
+
+
+@*@(await Html.RenderComponentAsync<WebAppConvas.Views.Shared.Components.Canvas>(RenderMode.ServerPrerendered))*@
+
+@*<script>
+    let startX = 0,
+        startY = 0,
+        curX = 0,
+        curY = 0,
+        preX = 0,
+        preY = 0,
+        drawFlag = false;
+    let canvas;
+
+    let savedStartX = 0,
+        savedStartY = 0,
+        savedX = 0,
+        savedY = 0,
+        savedXLen = 0,
+        savedYLen = 0;
+
+    window.onload = function() {
+        canvas = document.getElementById("canvas");
+        console.log(canvas);
+
+        canvas.addEventListener('mousedown', e => {
+            drawFlag = true;
+
+            startX = e.offsetX;
+            startY = e.offsetY;
+
+            console.log(startX, startY);
+
+            preX = startX;
+            preY = startY;
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if (!drawFlag) {
+                return;
+            }
+
+            curX = e.offsetX;
+            curY = e.offsetY;
+
+            drawRect(startX, startY, curX, curY);
+            reDrawRect(startX, startY, savedXLen, savedYLen);
+            preX = curX;
+            preY = curY;
+        });
+
+        canvas.addEventListener('mouseup', e => {
+            drawFlag = false;
+
+            savedStartX = startX;
+            savedStartY = startY;
+            savedX = e.offsetX;
+            savedY = e.offsetY;
+            savedXLen = e.offsetX - startX;
+            savedYLen = e.offsetY - startY;
+
+            reDrawRect(savedStartX, savedStartY, savedXLen, savedYLen);
+
+        });
+
+        canvas.addEventListener('mouseout', e => {
+            drawFlag = false;
+        });
+
+    }
+    
+    function drawRect(fromX, fromY, toX, toY) {
+
+        let context = canvas.getContext('2d');
+
+        context.strokeStyle = '#333333';
+        context.lineWidth = '1px';
+        //context.save();
+
+        //context.beginPath();
+        //context.clearRect(fromX, fromY, preX - fromX, preY - fromY);
+
+        //context.beginPath();
+        //context.clearRect(fromX, fromY, (toX - fromX), (toY - fromY));
+        //clearExpandRect(context, fromX, fromY, toX, toY);
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        console.log("clear");
+        context.strokeRect(fromX, fromY, toX - fromX, toY - fromY);
+        console.log("stroke");
+        
+
+        //context.stroke();
+        //context.restore();
+
+        //--
+        //var context = canvas.getContext('2d');
+
+        //context.strokeStyle = '#333333';
+        //context.save();
+        
+        ////context.clearRect(0, 0, canvas.width, canvas.height);
+        //context.clearRect(fromX, fromY, preX - fromX, preY - fromY);
+        //context.beginPath();
+        //context.strokeRect(fromX, fromY, toX - fromX, toY - fromY);
+        //console.log(fromX, fromY);
+
+        //context.stroke();
+        //context.restore();
+    }
+
+    function clearExpandRect(context, fromX, fromY, toX, toY) {
+        
+        if (toX > fromX && toY > fromY) {
+            context.clearRect(fromX-1, fromY-1, (toX - fromX)+10, (toY - fromY)+10);
+        }
+        else if(toX > fromX && toY < fromY) {
+            context.clearRect(fromX - 1, fromY + 1, (toX - fromX) + 1, (toY - fromY) - 1);
+        }
+        else if(toX < fromX && toY > fromY) {
+            context.clearRect(fromX + 1, fromY - 1, (toX - fromX) - 1, (toY - fromY) + 1);
+        }
+        else if(toX < fromX && toY > fromY){
+            context.clearRect(fromX + 1, fromY + 1, (toX - fromX) - 1, (toY - fromY) - 1);
+        }
+    }
+
+    function reDrawRect(pointX, pointY, XLen, YLen){
+        let context = canvas.getContext('2d');
+
+        context.strokeStyle = '#333333';
+        context.lineWidth = '1px';
+        context.strokeRect(pointX, pointY, XLen, YLen);
+    }
+
+    //----
+    
+
+</script>*@
