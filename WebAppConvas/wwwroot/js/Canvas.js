@@ -56,6 +56,8 @@ $(document).ready(function () {
     let textObjFillColor = $('txtObjFillColor');
     let txtObjWidth = $('txtObjWidth');
     let txtObjHeight = $('txtObjHeight');
+    let txtLineWidth = $('txtLineWidth');
+    let txtBorderColor = $('txtBorderColor');
 
     connection.start().then(function () {
         console.log("connection start...");
@@ -136,6 +138,7 @@ $(document).ready(function () {
             });
 
             const sendCrd = changeValue("width", txtObjWidth.value);
+            console.log(sendCrd);
             activeObj = sendCrd;
 
             connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
@@ -144,8 +147,109 @@ $(document).ready(function () {
 
             let context = canvas.getContext('2d');
             context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
         }
         
+    });
+
+    txtObjHeight.addEventListener('change', e => {
+        console.log("textHeight changed");
+        console.log(selectedObj);
+        console.log(txtObjHeight.value);
+        if (selectedObj != null && txtObjHeight.value > 0) {
+
+            connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            const sendCrd = changeValue("height", txtObjHeight.value);
+            console.log(sendCrd);
+            activeObj = sendCrd;
+
+            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+
+    });
+
+    textObjFillColor.addEventListener('change', e => {
+        console.log("textFillColor changed");
+        console.log(selectedObj);
+        console.log(textObjFillColor.value);
+        if (selectedObj != null) {
+
+            connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            const sendCrd = changeValue("fillColor", textObjFillColor.value);
+            console.log(sendCrd);
+            activeObj = sendCrd;
+
+            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+
+    });
+
+    txtLineWidth.addEventListener('change', e => {
+        console.log("txtLineWidth changed");
+        console.log(selectedObj);
+        console.log(txtLineWidth.value);
+        if (selectedObj != null) {
+
+            connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            const sendCrd = changeValue("lineWidth", txtLineWidth.value);
+            console.log(sendCrd);
+            activeObj = sendCrd;
+
+            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+
+    });
+
+    txtBorderColor.addEventListener('change', e => {
+        console.log("txtBorderColor changed");
+        console.log(selectedObj);
+        console.log(txtBorderColor.value);
+        if (selectedObj != null) {
+
+            connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            const sendCrd = changeValue("borderColor", txtBorderColor.value);
+            console.log(sendCrd);
+            activeObj = sendCrd;
+
+            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+
     });
 
     canvas.addEventListener('mousedown', e => {
@@ -263,6 +367,7 @@ $(document).ready(function () {
 
             drawFlag = false;
 
+            console.log(sendCrd);
             connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
                 return console.error(err.toString());
             });
@@ -286,9 +391,7 @@ $(document).ready(function () {
             txtLocX.value = moveStartX;
             txtLocY.value = moveStartY;
 
-            let lineWidth = "";
-            let borderColor = "";
-            const sendCrd = generateCrd(selectedObj.figure, selectedObj.name, moveStartX, moveStartY, moveEndX, moveEndY, lineWidth, borderColor, "");
+            const sendCrd = generateCrd(selectedObj.figure, selectedObj.name, moveStartX, moveStartY, moveEndX, moveEndY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
             activeObj = sendCrd;
 
             
@@ -324,22 +427,29 @@ $(document).ready(function () {
         startPointX, startPointY, endPointX, endPointY,
         lineWidth, borderColor, fillColor) {
 
-        let crdStartX = startPointX,
-            crdStartY = startPointY,
-            crdEndX = endPointX,
-            crdEndY = endPointY;
+        let crdStartX = parseInt(startPointX, 10),
+            crdStartY = parseInt(startPointY, 10),
+            crdEndX = parseInt(endPointX, 10),
+            crdEndY = parseInt(endPointY);
 
-        let sendXLength = endPointX - startPointX;
-        let sendYLength = endPointY - startPointY;
+        let sendXLength = parseInt(endPointX, 10) - parseInt(startPointX, 10);
+        let sendYLength = parseInt(endPointY, 10) - parseInt(startPointY, 10);
 
         let sendName = objName;
         let sendFigure = objFigure;
 
-        let sendLineWidth = lineWidth;
+        let sendLineWidth;
+        if (lineWidth == "") {
+            sendLineWidth = 1;
+        }
+        else {
+            sendLineWidth = parseInt(lineWidth, 10);
+        }
+         
         let sendBorderColor = borderColor;
         let sendFillColor = fillColor;
 
-        if (sendLineWidth == "") sendLineWidth = 1;
+        if (sendLineWidth == 0) sendLineWidth = parseInt(1, 10);
         if (sendBorderColor == "") sendBorderColor = "#000000";
         if (sendFillColor == "") sendFillColor = "#ffffff";
 
@@ -606,7 +716,6 @@ $(document).ready(function () {
         return reObj;
     }
 
-    ///works correctly
     function drawWithFillRect(fromX, fromY, toX, toY, selectFlg, isDrawing) {
 
         let lineWidth = 1; // border width
@@ -700,6 +809,7 @@ $(document).ready(function () {
         }
     }
 
+    //for selectObject
     function drawRectObject(rectObject) {
         
         let selectBorder = 5;
@@ -790,29 +900,60 @@ $(document).ready(function () {
             changeObj = generateCrd(selectedObj.figure, selectedObj.name, value, selectedObj.startY, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
         }
         else if (param == "startY") {
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startY, value, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, value, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
         }
         else if (param == "width") {
             // probably in order to change width parameter, you need to reculculate the endX/Y.
 
+            let changeEndX = 0;
             if (selectedObj.width < 0) {
-                changeEndX = selectedObj.startX - value;
+                // -width = endPointX - startPointX;
+                // endPointX - startPointX = -selectObj.width
+                changeEndX = parseInt(`-${selectedObj.startX}`, 10) - parseInt(value, 10);
             }
             else {
-                changeEndX = selectedObj.startX + value;
+                // width = endPointX - startPointX;
+                // endPointX - startPointX = selectObj.width
+                changeEndX = parseInt(selectedObj.startX, 10) + parseInt(value, 10);
             }
-
+            console.log("changeEndXValue is");
+            console.log(selectedObj.startX);
+            console.log(value);
+            console.log(parseInt(value, 10));
+            console.log(changeEndX);
             changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, changeEndX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
         }
         else if (param == "height") {
+            let changeEndY = 0;
+            // height = endY - startY
             if (selectedObj.height < 0) {
-                changeEndY = selectedObj.startY - value;
+                // -height = endY - startY
+                // endY = -height + startY
+                changeEndY = parseInt(`-${value}`, 10) + parseInt(selectedObj.startY, 10);
             }
             else {
-                changeEndY = selectedObj.startY + value;
+                // height = endY - startY
+                // endY = height + startY
+                changeEndY = parseInt(value, 10) + parseInt(selectedObj.startY, 10);
             }
-
+            console.log("changeEndYValue is");
+            console.log(selectedObj.startY);
+            console.log(value);
+            console.log(changeEndY);
             changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, changeEndY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+        }
+        else if (param == "fillColor") {
+            let changeColorCode = value;
+
+            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, changeColorCode);
+        }
+        else if (param == "lineWidth") {
+            let changeLineWidth = value;
+            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, selectedObj.endY, changeLineWidth, selectedObj.borderColor, selectedObj.fillColor);
+        }
+        else if (param == "borderColor") {
+            let changeBorderColor = value;
+            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, changeBorderColor, selectedObj.fillColor);
         }
 
         return changeObj;

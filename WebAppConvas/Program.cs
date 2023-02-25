@@ -1,4 +1,5 @@
 //using SignalRChat.Hubs;
+using Microsoft.AspNetCore.ResponseCompression;
 using WebAppConvas.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,13 @@ builder.Services.AddControllersWithViews();
 //For Blazor
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSignalR();
+
+//For sigalR and Blazor
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/octet-stream" });
+});
 
 var app = builder.Build();
 
@@ -23,6 +31,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+//For signalR and Blazor
+app.UseResponseCompression();
+
 app.UseRouting();
 
 app.UseAuthorization();
@@ -35,5 +46,6 @@ app.MapControllerRoute(
 app.MapBlazorHub();
 
 app.MapHub<CanvasHub>("/canvasHub");
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

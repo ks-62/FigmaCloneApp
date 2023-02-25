@@ -61,7 +61,7 @@ namespace WebAppConvas.Hubs
             try
             {
                 List<Coordinate> crdList = CoordinateList.dataList;
-                crdList.RemoveAll(obj => obj.StartX == crd.StartX && obj.StartY == crd.StartY && obj.EndX == crd.EndX && obj.EndY == crd.EndY);
+                crdList.RemoveAll(obj => obj.Name == crd.Name);
                 CoordinateList.dataList = crdList;
             }
             catch(Exception ex)

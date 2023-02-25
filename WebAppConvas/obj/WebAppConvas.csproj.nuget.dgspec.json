@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ksuna\\source\\repos\\WebAppConvas\\WebAppConvas\\WebAppConvas.csproj": {}
+    "C:\\Users\\ksuna\\source\\GitHub\\WebAppCanvas\\WebAppConvas\\WebAppConvas.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ksuna\\source\\repos\\WebAppConvas\\WebAppConvas\\WebAppConvas.csproj": {
+    "C:\\Users\\ksuna\\source\\GitHub\\WebAppCanvas\\WebAppConvas\\WebAppConvas.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ksuna\\source\\repos\\WebAppConvas\\WebAppConvas\\WebAppConvas.csproj",
+        "projectUniqueName": "C:\\Users\\ksuna\\source\\GitHub\\WebAppCanvas\\WebAppConvas\\WebAppConvas.csproj",
         "projectName": "WebAppConvas",
-        "projectPath": "C:\\Users\\ksuna\\source\\repos\\WebAppConvas\\WebAppConvas\\WebAppConvas.csproj",
+        "projectPath": "C:\\Users\\ksuna\\source\\GitHub\\WebAppCanvas\\WebAppConvas\\WebAppConvas.csproj",
         "packagesPath": "C:\\Users\\ksuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ksuna\\source\\repos\\WebAppConvas\\WebAppConvas\\obj\\",
+        "outputPath": "C:\\Users\\ksuna\\source\\GitHub\\WebAppCanvas\\WebAppConvas\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ksuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -39,6 +39,16 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
+          "dependencies": {
+            "Blazor.Extensions.Canvas": {
+              "target": "Package",
+              "version": "[1.1.1, )"
+            },
+            "Microsoft.AspNetCore.SignalR.Client": {
+              "target": "Package",
+              "version": "[7.0.3, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

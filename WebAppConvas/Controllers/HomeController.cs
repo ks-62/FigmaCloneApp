@@ -33,7 +33,7 @@ namespace WebAppConvas.Controllers
             return View();
         }
 
-        public IActionResult DragCanvas()
+        public IActionResult BlazerCanvas()
         {
             return View();
         }
