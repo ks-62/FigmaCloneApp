@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using WebAppConvas.Models;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace WebAppConvas.Hubs
 {
@@ -45,7 +46,9 @@ namespace WebAppConvas.Hubs
 
                 CoordinateList.dataList.Add(crd);
 
-                await Clients.All.SendAsync("ReceiveCoordinate", CoordinateList.dataList);
+                var sortedList = CoordinateList.dataList.OrderBy(x => x.ZIndex);
+
+                await Clients.All.SendAsync("ReceiveCoordinate", sortedList);
 
             }
             catch(Exception ex)
@@ -88,6 +91,31 @@ namespace WebAppConvas.Hubs
             }
         }
 
+        public async Task ChangeIndex(string crdName, int zIndx)
+        {
+            var sortedList = CoordinateList.dataList.OrderBy(x => x.ZIndex);
+
+            bool incrementFlg = false;
+            foreach(Coordinate crd in sortedList)
+            {
+
+                if (crd.ZIndex == zIndx) incrementFlg = true;
+
+                if (incrementFlg)
+                {
+                    crd.ZIndex += 1;
+                }
+
+                if (crd.Name == crdName)
+                {
+                    crd.ZIndex = zIndx;
+                }
+
+            }
+
+            await Clients.All.SendAsync("ReceiveCoordinate", sortedList);
+        }
+
 
         public int ToInt(string txt)
         {
@@ -95,4 +123,5 @@ namespace WebAppConvas.Hubs
         }
 
     }
+
 }

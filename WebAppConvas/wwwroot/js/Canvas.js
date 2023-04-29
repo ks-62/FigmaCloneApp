@@ -44,6 +44,8 @@ let OprMode = OprModeEnum.normal;
 
 let activeObj;
 
+
+
 $(document).ready(function () {
 
     let connection = new signalR.HubConnectionBuilder().withUrl("/CanvasHub").build();
@@ -58,6 +60,9 @@ $(document).ready(function () {
     let txtObjHeight = $('txtObjHeight');
     let txtLineWidth = $('txtLineWidth');
     let txtBorderColor = $('txtBorderColor');
+    let txtZIndex = $('txtZIndex');
+
+    let listItem;
 
     connection.start().then(function () {
         console.log("connection start...");
@@ -66,11 +71,20 @@ $(document).ready(function () {
     });
 
     connection.on("ReceiveCoordinate", function (crdList) {
-        crdData = crdList;
-        console.log("receiced!!!!!");
-        console.log(crdData);
+        try {
 
-        drawRectObjects(crdData);
+            crdData = crdList;
+            console.log("receiced!!!!!");
+            console.log(crdData);
+
+            drawRectObjects(crdData);
+            generateDDList(crdData);
+            console.log("complete");
+
+        } catch (e) {
+            console.log(e);
+
+        }
 
     });
 
@@ -127,6 +141,29 @@ $(document).ready(function () {
         }
     });
 
+    textObjName.addEventListener('change', e => {
+
+        if (selectedObj != null) {
+
+            connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            const sendCrd = changeValue("name", textObjName.value);
+            console.log(sendCrd);
+            activeObj = sendCrd;
+
+            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+
+    });
+
     txtObjWidth.addEventListener('change', e => {
         console.log("textWidth changed");
         console.log(selectedObj);
@@ -141,13 +178,14 @@ $(document).ready(function () {
             console.log(sendCrd);
             activeObj = sendCrd;
 
-            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
-                return console.log(err.toString());
-            });
-
             let context = canvas.getContext('2d');
             context.clearRect(0, 0, canvas.width, canvas.height);
             console.log("changed");
+
+            connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
+                return console.log(err.toString());
+            });
+            
         }
         
     });
@@ -252,6 +290,27 @@ $(document).ready(function () {
 
     });
 
+    txtZIndex.addEventListener('change', e => {
+        if (selectedObj != null) {
+
+            //connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+            //    return console.error(err.toString());
+            //});
+
+            let zidx = txtZIndex.value;
+            let intZIndx = parseInt(zidx, 10);
+            let changeCrdName = selectedObj.name;
+
+            connection.invoke("ChangeIndex", changeCrdName, intZIndx).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+    }); 
+
     canvas.addEventListener('mousedown', e => {
         if (OprMode == OprModeEnum.rectMode) {
             drawFlag = true;
@@ -278,6 +337,7 @@ $(document).ready(function () {
                 textObjFillColor.value = selectedObj.fillColor;
                 txtLineWidth.value = selectedObj.lineWidth;
                 txtBorderColor.value = selectedObj.borderColor;
+                txtZIndex.value = selectedObj.zIndex;
 
                 
             } 
@@ -322,9 +382,14 @@ $(document).ready(function () {
             });
 
             //---rendering
-            movingObj = generateCrd(selectedObj.figure, selectedObj.name,
-                moveStartX, moveStartY, moveEndX, moveEndY,
-                selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            movingObj = generateCrd(
+                selectedObj.figure, selectedObj.name,
+                moveStartX, moveStartY,
+                moveEndX, moveEndY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
             drawWithFillRect(moveStartX, moveStartY, moveEndX, moveEndY, OprMode, true);
 
             
@@ -363,7 +428,8 @@ $(document).ready(function () {
 
             let lineWidth = "";
             let borderColor = "";
-            let sendCrd = generateCrd("Rectangle", "", startX, startY, endX, endY, lineWidth, borderColor, "");
+            let zidx = getTopZIndex(crdData) + 1;
+            let sendCrd = generateCrd("Rectangle", "", startX, startY, endX, endY, lineWidth, borderColor, "", zidx);
 
             drawFlag = false;
 
@@ -381,6 +447,7 @@ $(document).ready(function () {
             moveDistanceX = endX - selectX;
             moveDistanceY = endY - selectY;
 
+            //perhaps, width and height change here
             moveStartX = selectedObj.leftTopX + moveDistanceX;
             moveStartY = selectedObj.leftTopY + moveDistanceY;
             moveEndX = selectedObj.rightBottomX + moveDistanceX;
@@ -391,24 +458,34 @@ $(document).ready(function () {
             txtLocX.value = moveStartX;
             txtLocY.value = moveStartY;
 
-            const sendCrd = generateCrd(selectedObj.figure, selectedObj.name, moveStartX, moveStartY, moveEndX, moveEndY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            const sendCrd = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                moveStartX, moveStartY,
+                moveEndX, moveEndY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
             activeObj = sendCrd;
 
             
-            //connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
-            //    return console.error(err.toString());
-            //});
+            connection.invoke("RemoveCoordinate", selectedObj).catch(function (err) {
+                return console.error(err.toString());
+            });
 
             selectDrag = false;
             moveDistanceX = 0;
             moveDistanceY = 0;
 
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
             connection.invoke("SaveCoordinate", sendCrd).catch(function (err) {
                 return console.log(err.toString());
             });
 
-            let context = canvas.getContext('2d');
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            
         }
 
     });
@@ -419,19 +496,143 @@ $(document).ready(function () {
         }
     });
 
+    // DDList Management
+    //For DDList
+    let isMouseDownOnDDList = false;
+    let movingItemId;
+    let isInserting = false;
+    let insertIndex;
+    let insertName;
+    document.addEventListener('mousedown', function (e) {
+        var objectListElement = document.getElementById('object-list');
+
+        // judge by classname
+        if (event.target && event.target.classList.contains('item-text')) {
+
+            let ddListMouseX = e.clientX;
+            let ddListMouseY = e.clientY;
+
+            let litem = event.target.closest(".list-item");
+            movingItemId = litem.id;
+            litem.style.backgroundColor = '#fadac5';
+
+            litem.style.opacity = 0.5;
+            litem.style.position = "fixed";
+            litem.style.top = `${ddListMouseY + 5}px`;
+            litem.style.left = `${ddListMouseX + 5}px`;
+
+            insertName = litem.textContent;
+
+            isMouseDownOnDDList = true;
+
+        }
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        var objectListElement = document.getElementById('object-list');
+
+        if (isMouseDownOnDDList == false) return;
+
+        let ddListMouseX = e.clientX;
+        let ddListMouseY = e.clientY;
+
+        let itm = document.getElementById(movingItemId);
+        itm.style.top = `${ddListMouseY + 5}px`;
+        itm.style.left = `${ddListMouseX + 5}px`;
+
+        
+    });
+
+    document.addEventListener('mouseover', function (e) {
+        var objectListElement = document.getElementById('object-list');
+
+        if (isMouseDownOnDDList == false) return;
+
+        let ddListMouseX = e.clientX;
+        let ddListMouseY = e.clientY;
+
+        let itm = document.getElementById(movingItemId);
+        itm.style.top = `${ddListMouseY + 5}px`;
+        itm.style.left = `${ddListMouseX + 5}px`;
+
+        if (event.target && event.target.classList.contains('insertZone')) {
+            console.log("mouseover");
+            let insrtZn = event.target;
+            console.log(insrtZn);
+            insrtZn.style.backgroundColor = "#fa7e6b";
+            insertIndex = insrtZn.getAttribute('idx');
+            isInserting = true;
+        }
+
+    });
+
+    document.addEventListener('mouseout', function (e) {
+
+        if (isMouseDownOnDDList == false) return;
+
+        if (event.target && event.target.classList.contains('insertZone')) {
+            if (isInserting) {
+                console.log("leave insertZone");
+                let insrtZn = event.target;
+                insrtZn.style.backgroundColor = "transparent";
+                isInserting = false;
+            }
+        }
+
+    });
+
+    document.addEventListener('mouseup', function (e) {
+        var objectListElement = document.getElementById('object-list');
+
+        if (isMouseDownOnDDList == false) return;
+
+        let ddListMouseX = e.clientX;
+        let ddListMouseY = e.clientY;
+        console.log(ddListMouseX, ddListMouseY);
+
+        let itm = document.getElementById(movingItemId);
+        
+        itm.style.top = `${ddListMouseY}px`;
+        itm.style.left = `${ddListMouseX}px`;
+
+        if (isInserting) {
+            let zidx = insertIndex;
+            let intZIndx = parseInt(zidx, 10);
+            let changeCrdName = insertName;
+            console.log(intZIndx, changeCrdName);
+
+            connection.invoke("ChangeIndex", changeCrdName, intZIndx).catch(function (err) {
+                return console.log(err.toString());
+            });
+
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("changed");
+        }
+
+        isMouseDownOnDDList = false;
+
+    });
+
+
+
     function $(id) {
         return document.getElementById(id);
     }
 
     function generateCrd(objFigure, objName,
         startPointX, startPointY, endPointX, endPointY,
-        lineWidth, borderColor, fillColor) {
+        lineWidth, borderColor, fillColor, objZIndex) {
 
         let crdStartX = parseInt(startPointX, 10),
             crdStartY = parseInt(startPointY, 10),
             crdEndX = parseInt(endPointX, 10),
             crdEndY = parseInt(endPointY);
 
+        let crdZIndx = objZIndex;
+
+        //endPointX and startPointX are supporsed to be points of inner rectangle.
+        //but in the code, even if they are points of inner rectangle, they are considered as outer rectangle's points
         let sendXLength = parseInt(endPointX, 10) - parseInt(startPointX, 10);
         let sendYLength = parseInt(endPointY, 10) - parseInt(startPointY, 10);
 
@@ -625,35 +826,6 @@ $(document).ready(function () {
 
         }
 
-        //const newCrd = {
-        //    Name: name,
-        //    Figure: figure,
-        //    Orientation: sendOrientation,
-        //    StartX: crdStartX,
-        //    StartY: crdStartY,
-        //    EndX: crdEndX,
-        //    EndY: crdEndY,
-        //    LeftTopX: sendLeftTopX,
-        //    LeftTopY: sendLeftTopY,
-        //    RightTopX: sendRightTopX,
-        //    RightTopY: sendRightTopY,
-        //    LeftBottomX: sendLeftBottomX,
-        //    LeftBottomY: sendLeftBottomY,
-        //    RightBottomX: sendRightBottomX,
-        //    RightBottomY: sendRightBottomY,
-        //    Width: sendXLength,
-        //    Height: sendYLength,
-        //    BorderStartX: sendBorderStartX,
-        //    BorderEndX: sendBorderEndX,
-        //    BorderStartY: sendBorderStartY,
-        //    BorderEndY: sendBorderEndY,
-        //    BorderWidth: sendBorderWidth,
-        //    BorderHeight: sendBorderHeight,
-        //    LineWidth: sendLineWidth,
-        //    BorderColor: sendBorderColor,
-        //    FillColor: sendFillColor
-        //}
-
         const newCrd = {
             name: sendName,
             figure: sendFigure,
@@ -662,6 +834,7 @@ $(document).ready(function () {
             startY: crdStartY,
             endX: crdEndX,
             endY: crdEndY,
+            zIndex: crdZIndx,
             leftTopX: sendLeftTopX,
             leftTopY: sendLeftTopY,
             rightTopX: sendRightTopX,
@@ -689,15 +862,19 @@ $(document).ready(function () {
     function checkSelect(slctX, slctY) {
         let reObj = ["none"];
 
-        for (let i = 0; i < crdData.length; i++) {
+        let crdMaxIndx = crdData.length - 1;
+        for (let i = crdMaxIndx; i >= 0; i--) {
             let value = crdData[i];
+
+            //in this line, width is already changed
+
             if ((value.leftTopX <= slctX) && (slctX <= value.rightTopX) &&
                 (value.leftTopY <= slctY) && (slctY <= value.leftBottomY)) {
                 let context = canvas.getContext("2d");
 
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 drawRectObjects(crdData);
-
+                
                 drawRectObject(value);
 
                 selectedRectX = value.leftTopX;
@@ -797,9 +974,13 @@ $(document).ready(function () {
     }
 
     function drawRectObjects(objList) {
+
+        console.log(objList.length);
+
         if (objList.length != 0) {
             objList.forEach(function (value) {
                 let context = canvas.getContext("2d");
+                console.log(value);
                 context.fillStyle = value.borderColor;// border color
                 context.fillRect(value.borderStartX, value.borderStartY, value.borderWidth, value.borderHeight);// render rectangle
 
@@ -807,6 +988,17 @@ $(document).ready(function () {
                 context.fillRect(value.startX, value.startY, value.width, value.height);// render rectangle
             });
         }
+    }
+
+    function getTopZIndex(objList) {
+        let topIdx = 0;
+
+        objList.forEach(function (value) {
+            let curIdx = parseInt(value.zIndex, 10);
+            if (topIdx < curIdx) topIdx = curIdx;
+        })
+
+        return topIdx;
     }
 
     //for selectObject
@@ -893,14 +1085,36 @@ $(document).ready(function () {
         //5. fill color
         //6. border width
         //7. border color
+        //8. z-index
+        //9. name
 
         let changeObj;
 
         if (param == "startX") {
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, value, selectedObj.startY, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                value,
+                selectedObj.startY,
+                selectedObj.endX,
+                selectedObj.endY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
         }
         else if (param == "startY") {
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, value, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                selectedObj.startX,
+                value,
+                selectedObj.endX,
+                selectedObj.endY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
         }
         else if (param == "width") {
             // probably in order to change width parameter, you need to reculculate the endX/Y.
@@ -921,7 +1135,17 @@ $(document).ready(function () {
             console.log(value);
             console.log(parseInt(value, 10));
             console.log(changeEndX);
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, changeEndX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                selectedObj.startX,
+                selectedObj.startY,
+                changeEndX,
+                selectedObj.endY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
         }
         else if (param == "height") {
             let changeEndY = 0;
@@ -940,24 +1164,128 @@ $(document).ready(function () {
             console.log(selectedObj.startY);
             console.log(value);
             console.log(changeEndY);
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, changeEndY, selectedObj.lineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                selectedObj.startX,
+                selectedObj.startY,
+                selectedObj.endX,
+                changeEndY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
         }
         else if (param == "fillColor") {
             let changeColorCode = value;
 
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, selectedObj.borderColor, changeColorCode);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                selectedObj.startX,
+                selectedObj.startY,
+                selectedObj.endX,
+                selectedObj.endY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                changeColorCode,
+                selectedObj.zIndex);
         }
         else if (param == "lineWidth") {
             let changeLineWidth = value;
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, selectedObj.endY, changeLineWidth, selectedObj.borderColor, selectedObj.fillColor);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                selectedObj.startX,
+                selectedObj.startY,
+                selectedObj.endX,
+                selectedObj.endY,
+                changeLineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
         }
         else if (param == "borderColor") {
             let changeBorderColor = value;
-            changeObj = generateCrd(selectedObj.figure, selectedObj.name, selectedObj.startX, selectedObj.startY, selectedObj.endX, selectedObj.endY, selectedObj.lineWidth, changeBorderColor, selectedObj.fillColor);
+            changeObj = generateCrd(
+                selectedObj.figure,
+                selectedObj.name,
+                selectedObj.startX,
+                selectedObj.startY,
+                selectedObj.endX,
+                selectedObj.endY,
+                selectedObj.lineWidth,
+                changeBorderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex);
+        }
+        //else if (param == "zindex") {
+        //    let zidx = value;
+        //    let changeCrdName = selectedObj.name;
+
+        //    connection.invoke("ChangeIndex", changeCrdName, zidx).catch(function (err) {
+        //        return console.log(err.toString());
+        //    });
+
+        //}
+        else if (param == "name") {
+
+            let changeName = value;
+            changeObj = generateCrd(
+                selectedObj.figure,
+                changeName,
+                selectedObj.startX,
+                selectedObj.startY,
+                selectedObj.endX,
+                selectedObj.endY,
+                selectedObj.lineWidth,
+                selectedObj.borderColor,
+                selectedObj.fillColor,
+                selectedObj.zIndex
+            );
         }
 
         return changeObj;
     }
+
+    // Drag and drop list
+    function generateDDList(objectList) {
+        var objectListElement = document.getElementById('object-list');
+        objectListElement.innerHTML = '';
+
+        for (var count = 0; count < objectList.length; count++) {
+
+            let betweenLi = document.createElement("li");
+            betweenLi.classList.add("insertZone");
+            betweenLi.style.display = "block";
+            betweenLi.style.height = "5px";
+            betweenLi.setAttribute('idx', objectList[count].zIndex);
+            betweenLi.setAttribute('objnm', objectList[count].name);
+            objectListElement.appendChild(betweenLi);
+
+
+            // create li element
+            var li = document.createElement('li');
+            li.classList.add("list-item");
+            let strId = `listItem_${count}`;
+            li.setAttribute('id', strId);
+            li.setAttribute('idx', objectList[count].zIndex);
+
+            // create p element
+            var p = document.createElement('p');
+            p.classList.add("item-text");
+
+            // get text information
+            var text = document.createTextNode(objectList[count].name);
+
+            // add elements to ul element
+            p.appendChild(text);
+            li.appendChild(p);
+            objectListElement.appendChild(li);
+
+        }
+    }
+
 
 
 });

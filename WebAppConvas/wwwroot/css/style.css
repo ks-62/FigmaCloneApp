@@ -14,3 +14,28 @@ canvas {
 .canvas-plate {
     display: flex;
 }
+
+
+#object-list {
+    margin: 0;
+    padding: 0;
+    width: 8.2rem;
+    background-color: #f0f0f0;
+}
+
+#object-list li {
+    list-style: none;
+}
+
+.list-item {
+    margin: 0;
+    user-select: none;
+}
+
+.list-item:hover {
+    cursor: pointer;
+}
+
+.item-text {
+    margin: 0.2rem 0.1rem;
+}
